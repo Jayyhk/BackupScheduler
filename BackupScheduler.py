@@ -1,22 +1,21 @@
 import tkinter as tk
 from tkinter import filedialog
-from tkinter import *
-import shutil
-import os
-import sys
-import webbrowser
-from datetime import datetime, timedelta
-import ctypes
 import customtkinter
 from PIL import Image
 import pystray
+import shutil
+import os
+import sys
+import ctypes
+import webbrowser
+from datetime import datetime, timedelta
 
 class BackupScheduler(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
         # configure window
-        self.title("\tBackupScheduler")
+        self.title("BackupScheduler")
         dpi = ctypes.windll.user32.GetDpiForWindow(customtkinter.CTk().winfo_id())
         ppi = customtkinter.CTk().winfo_fpixels('1i')
         scale = dpi/ppi
@@ -282,8 +281,15 @@ def on_exit(icon, item):
     icon.stop()
     app.quit()
 
+def is_running():
+    # check if app is already running
+    hwnd = ctypes.windll.user32.FindWindowW(None, "BackupScheduler")
+    return hwnd != 0
+
 if __name__ == "__main__":
     # run app
+    if is_running():
+        sys.exit()
     app = BackupScheduler()
     app.iconbitmap(resource_path('icons/BackupScheduler.ico'))
     app.protocol("WM_DELETE_WINDOW", on_closing)
