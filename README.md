@@ -68,7 +68,7 @@ BackupScheduler is a Python application built using the [CustomTkinter](https://
 
 - **📊 Backup Tracking:** Develop a separate tab or section that tracks backup history. Provide insights into the date, time, size, and status of each backup operation.
 
-- **🔁 Update Previous Backup:** Add an option to replace an existing backup.
+- **🔂 Update Previous Backup:** Add an option to replace an existing backup.
 
 ## Additional Notes
 
