@@ -215,7 +215,7 @@ class BackupScheduler(customtkinter.CTk):
 
         # create backup name
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        
+
         # remove duplicate if it exists and copy file/folder
         for source_path in source_paths.split("*"):
             basename, extension = os.path.splitext(os.path.basename(os.path.normpath(source_path)))
@@ -233,8 +233,11 @@ class BackupScheduler(customtkinter.CTk):
                     if os.path.exists(final_path):
                         shutil.rmtree(final_path)
                     shutil.copytree(source_path, final_path)
+                    creation_time = datetime.now().timestamp()
+                    os.utime(final_path, (creation_time, creation_time))
                     print(f"{source_path} copied to: {final_path}")
                     self.change_info("Backup completed!")
+  
             except FileExistsError:
                 print(f"Destination folder '{final_path}' already exists.")
                 self.change_info("Destination already\nexists.")
