@@ -136,7 +136,7 @@ class BackupScheduler(customtkinter.CTk):
         if os.path.isfile(source_path):
             total_size = os.path.getsize(source_path)
         elif os.path.isdir(source_path):
-            for dirpath, dirnames, filenames in os.walk(source_path):
+            for dirpath, filenames in os.walk(source_path):
                 for f in filenames:
                     fp = os.path.join(dirpath, f)
                     total_size += os.path.getsize(fp)
@@ -233,7 +233,6 @@ class BackupScheduler(customtkinter.CTk):
                     shutil.copytree(source_path, final_path)
                     print(f"{source_path} copied to: {final_path}")
                     self.change_info("Backup completed!")
-            # handle errors
             except FileExistsError:
                 print(f"Destination folder '{final_path}' already exists.")
                 self.change_info("Destination already\nexists.")
@@ -247,12 +246,12 @@ class BackupScheduler(customtkinter.CTk):
                 print(f"An unexpected error occurred: {str(e)}")
                 self.change_info("An unexpected\nerror occurred.")
 
-def save_data(backup_time, source_entry, dest_entry):
+def save_data(source_entry, dest_entry, backup_time):
     # save data to json file
     data = {
-        "prev_source_entry": backup_time,
-        "prev_dest_entry": source_entry,
-        "prev_backup_time": dest_entry
+        "prev_source_entry": source_entry,
+        "prev_dest_entry": dest_entry,
+        "prev_backup_time": backup_time
     }
     with open(resource_path('data.json'), 'w') as file:
         json.dump(data, file, indent=4, default=str)
