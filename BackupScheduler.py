@@ -8,6 +8,7 @@ import os
 import sys
 import ctypes
 import webbrowser
+import json
 from datetime import datetime, timedelta
 
 class BackupScheduler(customtkinter.CTk):
@@ -66,11 +67,6 @@ class BackupScheduler(customtkinter.CTk):
         self.backup_button.grid(row=3, column=1, padx=10, pady=(10,20), sticky="e")
         self.info_label = customtkinter.CTkLabel(self, text="", text_color="#242424", fg_color="transparent")
         self.info_label.grid(row=3, column=2, padx=5, pady=5, sticky="")
-
-        # configure variables
-        self.prev_backup_time = None
-        self.prev_source_entry = None
-        self.prev_dest_entry = None
 
     def change_info(self, text):
         # change info label text
@@ -174,23 +170,21 @@ class BackupScheduler(customtkinter.CTk):
     def schedule_backup(self):
         # validate time format
         try:
-            backup_time = datetime.strptime(self.time_entry.get(), "%H:%M")
+            backup_string = self.time_entry.get()
+            backup_time = datetime.strptime(backup_string, "%H:%M")
         except ValueError:
             print(f"Invalid time format. Please use HH:MM.")
             self.change_info("Invalid time format.\nPlease use HH:MM.")
             return
         
         # check if backup is already scheduled
-        if self.prev_source_entry != None:
-            prev_entries = set(self.prev_source_entry.split("*"))
-            print(f"prev_entries: {prev_entries}")
-            current_entries = set(self.source_entry.get().split("*"))
-            print(f"current_entries: {current_entries}")
-        if(backup_time == self.prev_backup_time and current_entries == prev_entries and self.dest_entry.get() == self.prev_dest_entry):
+        data = load_data()
+        if data["prev_source_entry"] != "None":
+            prev_source_entries = set(data["prev_source_entry"].split("*"))
+            current_source_entries = set(self.source_entry.get().split("*"))
+        if(current_source_entries == prev_source_entries and self.dest_entry.get() == data["prev_dest_entry"] and backup_string == data["prev_backup_time"]):
             return
-        self.prev_backup_time = backup_time
-        self.prev_source_entry = self.source_entry.get()
-        self.prev_dest_entry = self.dest_entry.get()
+        save_data(self.source_entry.get(), self.dest_entry.get(), backup_string)
 
         # calculate time until backup
         current_time = datetime.now().time()
@@ -253,6 +247,28 @@ class BackupScheduler(customtkinter.CTk):
                 print(f"An unexpected error occurred: {str(e)}")
                 self.change_info("An unexpected\nerror occurred.")
 
+def save_data(backup_time, source_entry, dest_entry):
+    # save data to json file
+    data = {
+        "prev_source_entry": backup_time,
+        "prev_dest_entry": source_entry,
+        "prev_backup_time": dest_entry
+    }
+    with open(resource_path('data.json'), 'w') as file:
+        json.dump(data, file, indent=4, default=str)
+        print("Backup data saved.")
+
+def load_data():
+    # load data from json
+    try:
+        with open(resource_path('data.json'), 'r') as file:
+            data = json.load(file)
+            print("Previous backup data loaded.")
+            return data
+    except FileNotFoundError:
+        print("No previous backup data found.")
+        return None
+
 def resource_path(relative_path):
     # get absolute path to resource
     try:
@@ -288,8 +304,9 @@ def is_running():
 
 if __name__ == "__main__":
     # run app
-    if is_running():
-        sys.exit()
+    # if is_running():
+    #     sys.exit()
+    print("Running BackupScheduler...")
     app = BackupScheduler()
     app.iconbitmap(resource_path('icons/BackupScheduler.ico'))
     app.protocol("WM_DELETE_WINDOW", on_closing)
