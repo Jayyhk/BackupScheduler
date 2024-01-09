@@ -136,7 +136,7 @@ class BackupScheduler(customtkinter.CTk):
         if os.path.isfile(source_path):
             total_size = os.path.getsize(source_path)
         elif os.path.isdir(source_path):
-            for dirpath, filenames in os.walk(source_path):
+            for dirpath, dirnames, filenames in os.walk(source_path):
                 for f in filenames:
                     fp = os.path.join(dirpath, f)
                     total_size += os.path.getsize(fp)
@@ -179,9 +179,11 @@ class BackupScheduler(customtkinter.CTk):
         
         # check if backup is already scheduled
         data = load_data()
-        if data["prev_source_entry"] != "None":
+        if data["prev_source_entry"] is not None:
             prev_source_entries = set(data["prev_source_entry"].split("*"))
-            current_source_entries = set(self.source_entry.get().split("*"))
+        else:
+            prev_source_entries = set()
+        current_source_entries = set(self.source_entry.get().split("*"))
         if(current_source_entries == prev_source_entries and self.dest_entry.get() == data["prev_dest_entry"] and backup_string == data["prev_backup_time"]):
             return
         save_data(self.source_entry.get(), self.dest_entry.get(), backup_string)
