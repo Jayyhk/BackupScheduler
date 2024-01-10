@@ -9,7 +9,6 @@ import sys
 import ctypes
 import webbrowser
 import json
-import json
 from datetime import datetime, timedelta
 
 class BackupScheduler(customtkinter.CTk):
@@ -173,8 +172,6 @@ class BackupScheduler(customtkinter.CTk):
         try:
             backup_string = self.time_entry.get()
             backup_time = datetime.strptime(backup_string, "%H:%M")
-            backup_string = self.time_entry.get()
-            backup_time = datetime.strptime(backup_string, "%H:%M")
         except ValueError:
             print(f"Invalid time format. Please use HH:MM.")
             self.change_info("Invalid time format.\nPlease use HH:MM.")
@@ -188,15 +185,7 @@ class BackupScheduler(customtkinter.CTk):
             prev_source_entries = set()
         current_source_entries = set(self.source_entry.get().split("*"))
         if(current_source_entries == prev_source_entries and self.dest_entry.get() == data["prev_dest_entry"] and backup_string == data["prev_backup_time"]):
-        data = load_data()
-        if data["prev_source_entry"] is not None:
-            prev_source_entries = set(data["prev_source_entry"].split("*"))
-        else:
-            prev_source_entries = set()
-        current_source_entries = set(self.source_entry.get().split("*"))
-        if(current_source_entries == prev_source_entries and self.dest_entry.get() == data["prev_dest_entry"] and backup_string == data["prev_backup_time"]):
             return
-        save_data(self.source_entry.get(), self.dest_entry.get(), backup_string)
         save_data(self.source_entry.get(), self.dest_entry.get(), backup_string)
 
         # calculate time until backup
@@ -227,7 +216,6 @@ class BackupScheduler(customtkinter.CTk):
         # create backup name
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-
         # remove duplicate if it exists and copy file/folder
         for source_path in source_paths.split("*"):
             basename, extension = os.path.splitext(os.path.basename(os.path.normpath(source_path)))
@@ -247,11 +235,8 @@ class BackupScheduler(customtkinter.CTk):
                     shutil.copytree(source_path, final_path)
                     creation_time = datetime.now().timestamp()
                     os.utime(final_path, (creation_time, creation_time))
-                    creation_time = datetime.now().timestamp()
-                    os.utime(final_path, (creation_time, creation_time))
                     print(f"{source_path} copied to: {final_path}")
                     self.change_info("Backup completed!")
-  
   
             except FileExistsError:
                 print(f"Destination folder '{final_path}' already exists.")
@@ -322,10 +307,9 @@ def is_running():
     return hwnd != 0
 
 if __name__ == "__main__":
-    # run app
+    # uncomment when packaging with pyinstaller
     # if is_running():
     #     sys.exit()
-    print("Running BackupScheduler...")
     app = BackupScheduler()
     print("Running BackupScheduler...")
     app.iconbitmap(resource_path('icons/BackupScheduler.ico'))
