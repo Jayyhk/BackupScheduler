@@ -9,6 +9,7 @@ import sys
 import ctypes
 import webbrowser
 import json
+import atexit
 from datetime import datetime, timedelta
 
 class BackupScheduler(customtkinter.CTk):
@@ -43,7 +44,7 @@ class BackupScheduler(customtkinter.CTk):
         # configure github logo
         github_logo = customtkinter.CTkImage(dark_image = Image.open(resource_path('config/icons/github.png')), size = (42, 42))
         self.github_label = customtkinter.CTkLabel(self.sidebar_frame, image=github_logo, width=50, height=50, text="", fg_color="transparent")
-        self.github_label.bind("<Button-1>", lambda event: webbrowser.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
+        self.github_label.bind("<Button-1>", lambda event: webbrowser.open("https://github.com/Jayyhk/BackupScheduler"))
         self.github_label.bind("<Enter>",  lambda event: self.github_label.configure(cursor="hand2"))
         self.github_label.bind("<Leave>", lambda event: self.github_label.configure(cursor=""))
         self.github_label.grid(row=3, column=0, padx=20, pady=(50,0))
@@ -288,20 +289,26 @@ def on_closing():
     app.withdraw()
     image = Image.open(resource_path('config/icons/tray.ico'))
     icon = pystray.Icon("BackupScheduler", image, menu=pystray.Menu(
-        pystray.MenuItem("Show", on_show),
-        pystray.MenuItem("Quit", on_exit)))
+                        pystray.MenuItem("Show", on_show),
+                        pystray.MenuItem("Quit", on_exit)))
     icon.run()
 
 def on_show(icon, item):
     # show window
     icon.stop()
     app.deiconify()
+    app.lift()
+    app.focus_force()
 
 def on_exit(icon, item):
     # exit app
     icon.stop()
-    ctypes.windll.kernel32.ReleaseMutex(mutex)
+    release_mutex()
     app.quit()
+
+@atexit.register
+def release_mutex():
+    ctypes.windll.kernel32.ReleaseMutex(mutex)
 
 def enforce_single_instance():
     # create a mutex
