@@ -39,6 +39,7 @@ BackupScheduler is a Python application built using the [CustomTkinter](https://
       ```bash
       pip install customtkinter --upgrade
       ```
+**Make sure the config folder is in the same directory as the script when running the script through the command line or through an exe compiled with PyInstaller.**
 
 ## Usage
 
@@ -72,6 +73,6 @@ BackupScheduler is a Python application built using the [CustomTkinter](https://
 
 ## Additional Notes
 
-Images used in the application are included in the "icons" folder.
+Images used in the application are included in the "icons" folder in the "config" folder.
 
 Feel free to open an issue if you spot a bug and customize and enhance the application according to your needs. Happy backing up!
