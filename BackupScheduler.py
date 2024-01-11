@@ -41,7 +41,7 @@ class BackupScheduler(customtkinter.CTk):
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 20))
 
         # configure github logo
-        github_logo = customtkinter.CTkImage(dark_image = Image.open(resource_path('icons/github.png')), size = (42, 42))
+        github_logo = customtkinter.CTkImage(dark_image = Image.open(resource_path('config/icons/github.png')), size = (42, 42))
         self.github_label = customtkinter.CTkLabel(self.sidebar_frame, image=github_logo, width=50, height=50, text="", fg_color="transparent")
         self.github_label.bind("<Button-1>", lambda event: webbrowser.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
         self.github_label.bind("<Enter>",  lambda event: self.github_label.configure(cursor="hand2"))
@@ -274,18 +274,19 @@ def load_data():
         return None
 
 def resource_path(relative_path):
-    # get absolute path to resource
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
+    if getattr(sys, 'frozen', False):
+    # we are running in a bundle
+        base_path = os.path.dirname(sys.executable)
+    else:
+    # we are running in a normal Python environment
+        base_path = os.path.dirname(os.path.realpath(__file__))
 
     return os.path.join(base_path, relative_path)
 
 def on_closing():
     # minimize to tray
     app.withdraw()
-    image = Image.open(resource_path('icons/tray.ico'))
+    image = Image.open(resource_path('config/icons/tray.ico'))
     icon = pystray.Icon("BackupScheduler", image, menu=pystray.Menu(
         pystray.MenuItem("Show", on_show),
         pystray.MenuItem("Quit", on_exit)))
@@ -299,19 +300,24 @@ def on_show(icon, item):
 def on_exit(icon, item):
     # exit app
     icon.stop()
+    ctypes.windll.kernel32.ReleaseMutex(mutex)
     app.quit()
 
-def is_running():
-    # check if app is already running
-    hwnd = ctypes.windll.user32.FindWindowW(None, "BackupScheduler")
-    return hwnd != 0
+def enforce_single_instance():
+    # create a mutex
+    global mutex
+    mutex = ctypes.windll.kernel32.CreateMutexW(None, False, "BackupScheduler_mutex")
+    
+    # if the mutex already exists, exit the program
+    if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+        print("BackupScheduler is already running.")
+        sys.exit(0)
 
 if __name__ == "__main__":
-    # uncomment when packaging with pyinstaller
-    # if is_running():
-    #     sys.exit()
+    # check if app is already running
+    enforce_single_instance()
     app = BackupScheduler()
     print("Running BackupScheduler...")
-    app.iconbitmap(resource_path('icons/BackupScheduler.ico'))
+    app.iconbitmap(resource_path('config/icons/BackupScheduler.ico'))
     app.protocol("WM_DELETE_WINDOW", on_closing)
     app.mainloop()
