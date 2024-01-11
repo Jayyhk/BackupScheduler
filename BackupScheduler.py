@@ -176,17 +176,6 @@ class BackupScheduler(customtkinter.CTk):
             print(f"Invalid time format. Please use HH:MM.")
             self.change_info("Invalid time format.\nPlease use HH:MM.")
             return
-        
-        # check if backup is already scheduled
-        data = load_data()
-        if data["prev_source_entry"] is not None:
-            prev_source_entries = set(data["prev_source_entry"].split("*"))
-        else:
-            prev_source_entries = set()
-        current_source_entries = set(self.source_entry.get().split("*"))
-        if(current_source_entries == prev_source_entries and self.dest_entry.get() == data["prev_dest_entry"] and backup_string == data["prev_backup_time"]):
-            return
-        save_data(self.source_entry.get(), self.dest_entry.get(), backup_string)
 
         # calculate time until backup
         current_time = datetime.now().time()
@@ -194,6 +183,9 @@ class BackupScheduler(customtkinter.CTk):
         if current_time > backup_time.time():
             backup_datetime += timedelta(days=1)
         time_until_backup = (backup_datetime - datetime.now()).total_seconds()
+
+        # save data to json file
+        save_data(self.source_entry.get(), self.dest_entry.get(), backup_string)
 
         # wait until backup time and perform backup
         source_paths = self.source_entry.get()
@@ -214,7 +206,7 @@ class BackupScheduler(customtkinter.CTk):
             return
 
         # create backup name
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
         # remove duplicate if it exists and copy file/folder
         for source_path in source_paths.split("*"):
@@ -253,11 +245,17 @@ class BackupScheduler(customtkinter.CTk):
 
 def save_data(source_entry, dest_entry, backup_time):
     # save data to json file
-    data = {
-        "prev_source_entry": source_entry,
-        "prev_dest_entry": dest_entry,
-        "prev_backup_time": backup_time
+    with open('config/data.json', 'r') as file:
+        data = json.load(file)
+
+    backup_info = {
+        'source': source_entry,
+        'destination': dest_entry,
+        'time': backup_time
     }
+
+    data.setdefault("backups", []).append(backup_info)
+
     with open(resource_path('config/data.json'), 'w') as file:
         json.dump(data, file, indent=4, default=str)
         print("Backup data saved.")
