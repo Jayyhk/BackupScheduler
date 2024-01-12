@@ -59,8 +59,16 @@ class BackupScheduler(customtkinter.CTk):
         self.dest_entry.grid(row=1, column=1, padx=10, pady=10, sticky="w")
         self.browse_dest_button = customtkinter.CTkButton(self, text="Folder", command=self.browse_dest)
         self.browse_dest_button.grid(row=1, column=2, padx=5, pady=10)
+
+        self.day_label = customtkinter.CTkLabel(self, text="Day:", text_color="#DCE4EE", fg_color="transparent")
+        self.day_label.grid(row=2, column=1, padx=16, pady=10, sticky="w")
+        self.day_entry = customtkinter.CTkEntry(self, placeholder_text="mm-dd", width=55)
+        self.day_entry.grid(row=2, column=1, padx=(47,10), pady=10, sticky="w")
+        self.time_label = customtkinter.CTkLabel(self, text="Time:", text_color="#DCE4EE", fg_color="transparent")
+        self.time_label.grid(row=2, column=1, padx=(112,10), pady=10, sticky="w")
         self.time_entry = customtkinter.CTkEntry(self, placeholder_text="HH:MM", width=58)
-        self.time_entry.grid(row=2, column=1, padx=10, pady=10, sticky="w")
+        self.time_entry.grid(row=2, column=1, padx=(153,10), pady=10, sticky="w")
+
         self.schedule_backup_button = customtkinter.CTkButton(self, text="Schedule Backup", width=170, command=self.save_changes)
         self.schedule_backup_button.grid(row=3, column=1, padx=10, pady=(10,20), sticky="w")
         self.backup_button = customtkinter.CTkButton(self, text="Backup Now", width=170, command=lambda: self.add_instant_backup(self.source_entry.get(), self.dest_entry.get()))
@@ -162,7 +170,7 @@ class BackupScheduler(customtkinter.CTk):
         dest_path = self.dest_entry.get()
 
         # validate fields
-        if all([self.source_entry.get(), self.dest_entry.get(), self.time_entry.get()]):
+        if all([self.source_entry.get(), self.dest_entry.get(), self.time_entry.get()]) or all([self.source_entry.get(), self.dest_entry.get(), self.day_entry.get()]):
             if not all(self.validate_paths(source_path, dest_path) for source_path in source_paths.split("*")):
                 return
             if not all(self.check_storage_space(source_path, dest_path) for source_path in source_paths.split("*")):
@@ -173,28 +181,43 @@ class BackupScheduler(customtkinter.CTk):
             self.change_info("Please fill in all fields.")
     
     def schedule_backup(self):
-        # validate time format
-        try:
-            backup_string = self.time_entry.get()
-            backup_time = datetime.strptime(backup_string, "%H:%M")
-        except ValueError:
-            print(f"Invalid time format. Please use HH:MM.")
-            self.change_info("Invalid time format.\nPlease use HH:MM.")
-            return
-
-        # calculate time until backup
-        current_time = datetime.now().time()
-        backup_datetime = datetime.combine(datetime.now().date(), backup_time.time())
-        if current_time > backup_time.time():
-            backup_datetime += timedelta(days=1)
-        time_until_backup = (backup_datetime - datetime.now()).total_seconds()
-
-        # add data to json file
-        add_data(self.source_entry.get(), self.dest_entry.get(), backup_string)
-
-        # wait until backup time and perform backup
+        # store paths
         source_paths = self.source_entry.get()
         dest_path = self.dest_entry.get()
+
+        # validate time format
+        try:
+            backup_string = self.day_entry.get() + " " + self.time_entry.get()
+            backup_string = backup_string.strip()
+            backup_datetime = datetime.strptime(backup_string, "%m-%d %H:%M")
+        except ValueError:
+            try:
+                backup_datetime = datetime.strptime(backup_string, "%m-%d")
+            except ValueError:
+                try:
+                    backup_datetime = datetime.strptime(backup_string, "%H:%M")
+                    current_date = datetime.now().strftime("%m-%d")
+                    backup_datetime_string = current_date + " " + backup_string
+                    backup_datetime = datetime.strptime(backup_datetime_string, "%m-%d %H:%M")
+                except ValueError:
+                    print("Invalid time format. Please use mm-dd and HH:MM.")
+                    self.change_info("Invalid time format.\nPlease use mm-dd and HH:MM.")
+                    return
+        
+        # calculate backup datetime
+        now = datetime.now()
+        backup_datetime = backup_datetime.replace(year=now.year)
+        if(now > backup_datetime):
+            if(now.date() > backup_datetime.date()):
+                backup_datetime = backup_datetime.replace(year=backup_datetime.year+1)
+            elif(backup_datetime + timedelta(days=1) > now):
+                backup_datetime += timedelta(days=1)
+
+        # add backup data to json file
+        add_data(source_paths, dest_path, backup_datetime)
+
+        # wait until backup time and perform backup
+        time_until_backup = (backup_datetime - datetime.now()).total_seconds()
         import threading
         threading.Timer(time_until_backup, lambda: self.perform_backup(source_paths, dest_path)).start()
 
@@ -327,7 +350,7 @@ def enforce_single_instance():
 
 if __name__ == "__main__":
     # check if app is already running
-    # enforce_single_instance()
+    enforce_single_instance()
     app = BackupScheduler()
     print("Running BackupScheduler...")
     app.iconbitmap(resource_path('config/icons/BackupScheduler.ico'))
