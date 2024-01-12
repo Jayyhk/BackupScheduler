@@ -63,7 +63,7 @@ class BackupScheduler(customtkinter.CTk):
         self.time_entry.grid(row=2, column=1, padx=10, pady=10, sticky="w")
         self.schedule_backup_button = customtkinter.CTkButton(self, text="Schedule Backup", width=170, command=self.save_changes)
         self.schedule_backup_button.grid(row=3, column=1, padx=10, pady=(10,20), sticky="w")
-        self.backup_button = customtkinter.CTkButton(self, text="Backup Now", width=170, command=lambda: self.perform_backup(self.source_entry.get(), self.dest_entry.get()))
+        self.backup_button = customtkinter.CTkButton(self, text="Backup Now", width=170, command=lambda: self.add_instant_backup(self.source_entry.get(), self.dest_entry.get()))
         self.backup_button.grid(row=3, column=1, padx=10, pady=(10,20), sticky="e")
         self.info_label = customtkinter.CTkLabel(self, text="", text_color="#242424", fg_color="transparent")
         self.info_label.grid(row=3, column=2, padx=5, pady=5, sticky="")
@@ -152,6 +152,11 @@ class BackupScheduler(customtkinter.CTk):
             return False
         return True
 
+    def add_instant_backup(self, source_path, dest_path):
+        add_data(source_path, dest_path, datetime.now().strftime("%H:%M"))
+        print(datetime.now().strftime("%H:%M"))
+        self.perform_backup(source_path, dest_path)
+
     def save_changes(self):
         source_paths = self.source_entry.get()
         dest_path = self.dest_entry.get()
@@ -166,7 +171,7 @@ class BackupScheduler(customtkinter.CTk):
         else:
             print(f"Please fill in all fields.")
             self.change_info("Please fill in all fields.")
-            
+    
     def schedule_backup(self):
         # validate time format
         try:
@@ -184,8 +189,8 @@ class BackupScheduler(customtkinter.CTk):
             backup_datetime += timedelta(days=1)
         time_until_backup = (backup_datetime - datetime.now()).total_seconds()
 
-        # save data to json file
-        save_data(self.source_entry.get(), self.dest_entry.get(), backup_string)
+        # add data to json file
+        add_data(self.source_entry.get(), self.dest_entry.get(), backup_string)
 
         # wait until backup time and perform backup
         source_paths = self.source_entry.get()
@@ -204,6 +209,9 @@ class BackupScheduler(customtkinter.CTk):
             return
         if not all(self.check_storage_space(source_path, dest_path) for source_path in source_paths.split("*")):
             return
+
+        # remove previous backup data
+        remove_data()
 
         # create backup name
         timestamp = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
@@ -229,7 +237,7 @@ class BackupScheduler(customtkinter.CTk):
                     os.utime(final_path, (creation_time, creation_time))
                     print(f"{source_path} copied to: {final_path}")
                     self.change_info("Backup completed!")
-  
+
             except FileExistsError:
                 print(f"Destination folder '{final_path}' already exists.")
                 self.change_info("Destination already\nexists.")
@@ -243,10 +251,15 @@ class BackupScheduler(customtkinter.CTk):
                 print(f"An unexpected error occurred: {str(e)}")
                 self.change_info("An unexpected\nerror occurred.")
 
-def save_data(source_entry, dest_entry, backup_time):
+def remove_data():
+    # remove first backup from json file
+    data = load_data()
+    data['backups'].pop(0)
+    save_data(data)
+
+def add_data(source_entry, dest_entry, backup_time):
     # save data to json file
-    with open('config/data.json', 'r') as file:
-        data = json.load(file)
+    data = load_data()
 
     backup_info = {
         'source': source_entry,
@@ -255,17 +268,18 @@ def save_data(source_entry, dest_entry, backup_time):
     }
 
     data.setdefault("backups", []).append(backup_info)
+    save_data(data)
 
+def save_data(data):
+    # save data to json file
     with open(resource_path('config/data.json'), 'w') as file:
         json.dump(data, file, indent=4, default=str)
-        print("Backup data saved.")
 
 def load_data():
     # load data from json
     try:
         with open(resource_path('config/data.json'), 'r') as file:
             data = json.load(file)
-            print("Previous backup data loaded.")
             return data
     except FileNotFoundError:
         print("No previous backup data found.")
@@ -313,7 +327,7 @@ def enforce_single_instance():
 
 if __name__ == "__main__":
     # check if app is already running
-    enforce_single_instance()
+    # enforce_single_instance()
     app = BackupScheduler()
     print("Running BackupScheduler...")
     app.iconbitmap(resource_path('config/icons/BackupScheduler.ico'))
