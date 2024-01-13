@@ -209,7 +209,10 @@ class BackupScheduler(customtkinter.CTk):
         now = datetime.now()
         if(now > backup_datetime):
             if(now.date() > backup_datetime.date()):
-                if((datetime(3, 2, 29) <= now.date().replace(year=(now.year % 3))) and (now.date().replace(year=(now.year % 3)) < datetime(4,2,29))):
+                adj_year = now.year % 4
+                if(adj_year == 0):
+                    adj_year += 4
+                if((datetime(3, 2, 29) <= now.date().replace(year=adj_year)) and (now.date().replace(year=adj_year) < datetime(4,2,29))):
                     backup_datetime += timedelta(days=366)
                 else:
                     backup_datetime += timedelta(days=365)
