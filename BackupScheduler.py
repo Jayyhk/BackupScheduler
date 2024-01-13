@@ -161,8 +161,7 @@ class BackupScheduler(customtkinter.CTk):
         return True
 
     def add_instant_backup(self, source_path, dest_path):
-        add_data(source_path, dest_path, datetime.now().strftime("%H:%M"))
-        print(datetime.now().strftime("%H:%M"))
+        add_to_queue(source_path, dest_path, datetime.now().strftime("%Y-%m-%d %H:%M"))
         self.perform_backup(source_path, dest_path)
 
     def save_changes(self):
@@ -193,7 +192,7 @@ class BackupScheduler(customtkinter.CTk):
             backup_datetime = datetime.strptime(str(year) + "-" + backup_string, "%Y-%m-%d %H:%M")
         except ValueError:
             try:
-                backup_datetime = datetime.strptime(backup_datetime, "$Y-%m-%d")
+                backup_datetime = datetime.strptime(str(year) + "-" + backup_string, "$Y-%m-%d")
             except ValueError:
                 try:
                     backup_datetime = datetime.strptime(backup_string, "%H:%M")
@@ -212,15 +211,16 @@ class BackupScheduler(customtkinter.CTk):
                 adj_year = now.year % 4
                 if(adj_year == 0):
                     adj_year += 4
-                if((datetime(3, 2, 29) <= now.date().replace(year=adj_year)) and (now.date().replace(year=adj_year) < datetime(4,2,29))):
+                if((datetime(3, 3, 1) <= now.date().replace(year=adj_year)) and (now.date().replace(year=adj_year) < datetime(4,2,29))):
                     backup_datetime += timedelta(days=366)
                 else:
                     backup_datetime += timedelta(days=365)
             elif(backup_datetime + timedelta(days=1) > now):
                 backup_datetime += timedelta(days=1)
+        backup_string = backup_datetime.strftime("%Y-%m-%d %H:%M")
 
         # add backup data to json file
-        add_data(source_paths, dest_path, backup_datetime)
+        add_to_queue(source_paths, dest_path, backup_string)
 
         # wait until backup time and perform backup
         time_until_backup = (backup_datetime - datetime.now()).total_seconds()
@@ -239,11 +239,11 @@ class BackupScheduler(customtkinter.CTk):
         if not all(self.check_storage_space(source_path, dest_path) for source_path in source_paths.split("*")):
             return
 
-        # remove previous backup data
-        remove_data()
+        # move first backup from queue to history
+        move_to_history()
 
         # create backup name
-        timestamp = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H-%M")
 
         # remove duplicate if it exists and copy file/folder
         for source_path in source_paths.split("*"):
@@ -280,13 +280,14 @@ class BackupScheduler(customtkinter.CTk):
                 print(f"An unexpected error occurred: {str(e)}")
                 self.change_info("An unexpected\nerror occurred.")
 
-def remove_data():
+def move_to_history():
     # remove first backup from json file
     data = load_data()
-    data['backups'].pop(0)
+    backup = data['queue'].pop(0)
+    data.setdefault("history", []).append(backup)
     save_data(data)
 
-def add_data(source_entry, dest_entry, backup_time):
+def add_to_queue(source_entry, dest_entry, backup_time):
     # save data to json file
     data = load_data()
 
@@ -296,7 +297,7 @@ def add_data(source_entry, dest_entry, backup_time):
         'time': backup_time
     }
 
-    data.setdefault("backups", []).append(backup_info)
+    data.setdefault("queue", []).append(backup_info)
     save_data(data)
 
 def save_data(data):
