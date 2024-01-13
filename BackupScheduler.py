@@ -60,11 +60,19 @@ class BackupScheduler(customtkinter.CTk):
         self.dest_entry.grid(row=1, column=1, padx=10, pady=10, sticky="w")
         self.browse_dest_button = customtkinter.CTkButton(self, text="Folder", command=self.browse_dest)
         self.browse_dest_button.grid(row=1, column=2, padx=5, pady=10)
+
+        self.day_label = customtkinter.CTkLabel(self, text="Day:", text_color="#DCE4EE", fg_color="transparent")
+        self.day_label.grid(row=2, column=1, padx=16, pady=10, sticky="w")
+        self.day_entry = customtkinter.CTkEntry(self, placeholder_text="mm-dd", width=55)
+        self.day_entry.grid(row=2, column=1, padx=(47,10), pady=10, sticky="w")
+        self.time_label = customtkinter.CTkLabel(self, text="Time:", text_color="#DCE4EE", fg_color="transparent")
+        self.time_label.grid(row=2, column=1, padx=(112,10), pady=10, sticky="w")
         self.time_entry = customtkinter.CTkEntry(self, placeholder_text="HH:MM", width=58)
-        self.time_entry.grid(row=2, column=1, padx=10, pady=10, sticky="w")
+        self.time_entry.grid(row=2, column=1, padx=(153,10), pady=10, sticky="w")
+
         self.schedule_backup_button = customtkinter.CTkButton(self, text="Schedule Backup", width=170, command=self.save_changes)
         self.schedule_backup_button.grid(row=3, column=1, padx=10, pady=(10,20), sticky="w")
-        self.backup_button = customtkinter.CTkButton(self, text="Backup Now", width=170, command=lambda: self.perform_backup(self.source_entry.get(), self.dest_entry.get()))
+        self.backup_button = customtkinter.CTkButton(self, text="Backup Now", width=170, command=lambda: self.add_instant_backup(self.source_entry.get(), self.dest_entry.get()))
         self.backup_button.grid(row=3, column=1, padx=10, pady=(10,20), sticky="e")
         self.info_label = customtkinter.CTkLabel(self, text="", text_color="#242424", fg_color="transparent")
         self.info_label.grid(row=3, column=2, padx=5, pady=5, sticky="")
@@ -153,12 +161,16 @@ class BackupScheduler(customtkinter.CTk):
             return False
         return True
 
+    def add_instant_backup(self, source_path, dest_path):
+        add_to_queue(source_path, dest_path, datetime.now().strftime("%Y-%m-%d %H:%M"))
+        self.perform_backup(source_path, dest_path)
+
     def save_changes(self):
         source_paths = self.source_entry.get()
         dest_path = self.dest_entry.get()
 
         # validate fields
-        if all([self.source_entry.get(), self.dest_entry.get(), self.time_entry.get()]):
+        if all([self.source_entry.get(), self.dest_entry.get(), self.time_entry.get()]) or all([self.source_entry.get(), self.dest_entry.get(), self.day_entry.get()]):
             if not all(self.validate_paths(source_path, dest_path) for source_path in source_paths.split("*")):
                 return
             if not all(self.check_storage_space(source_path, dest_path) for source_path in source_paths.split("*")):
@@ -167,38 +179,52 @@ class BackupScheduler(customtkinter.CTk):
         else:
             print(f"Please fill in all fields.")
             self.change_info("Please fill in all fields.")
-            
+    
     def schedule_backup(self):
-        # validate time format
-        try:
-            backup_string = self.time_entry.get()
-            backup_time = datetime.strptime(backup_string, "%H:%M")
-        except ValueError:
-            print(f"Invalid time format. Please use HH:MM.")
-            self.change_info("Invalid time format.\nPlease use HH:MM.")
-            return
-        
-        # check if backup is already scheduled
-        data = load_data()
-        if data["prev_source_entry"] is not None:
-            prev_source_entries = set(data["prev_source_entry"].split("*"))
-        else:
-            prev_source_entries = set()
-        current_source_entries = set(self.source_entry.get().split("*"))
-        if(current_source_entries == prev_source_entries and self.dest_entry.get() == data["prev_dest_entry"] and backup_string == data["prev_backup_time"]):
-            return
-        save_data(self.source_entry.get(), self.dest_entry.get(), backup_string)
-
-        # calculate time until backup
-        current_time = datetime.now().time()
-        backup_datetime = datetime.combine(datetime.now().date(), backup_time.time())
-        if current_time > backup_time.time():
-            backup_datetime += timedelta(days=1)
-        time_until_backup = (backup_datetime - datetime.now()).total_seconds()
-
-        # wait until backup time and perform backup
+        # store paths
         source_paths = self.source_entry.get()
         dest_path = self.dest_entry.get()
+
+        # validate time format
+        try:
+            backup_string = self.day_entry.get() + " " + self.time_entry.get()
+            backup_string = backup_string.strip()
+            year = datetime.now().year
+            backup_datetime = datetime.strptime(str(year) + "-" + backup_string, "%Y-%m-%d %H:%M")
+        except ValueError:
+            try:
+                backup_datetime = datetime.strptime(str(year) + "-" + backup_string, "$Y-%m-%d")
+            except ValueError:
+                try:
+                    backup_datetime = datetime.strptime(backup_string, "%H:%M")
+                    current_date = datetime.now().strftime("%Y-%m-%d")
+                    backup_datetime_string = current_date + " " + backup_string
+                    backup_datetime = datetime.strptime(backup_datetime_string, "%Y-%m-%d %H:%M")
+                except ValueError:
+                    print("Invalid time format. Please use mm-dd and HH:MM.")
+                    self.change_info("Invalid time format.\nPlease use mm-dd and HH:MM.")
+                    return
+        
+        # calculate backup datetime
+        now = datetime.now()
+        if(now > backup_datetime):
+            if(now.date() > backup_datetime.date()):
+                adj_year = now.year % 4
+                if(adj_year == 0):
+                    adj_year += 4
+                if((datetime(3, 3, 1) <= now.date().replace(year=adj_year)) and (now.date().replace(year=adj_year) < datetime(4,2,29))):
+                    backup_datetime += timedelta(days=366)
+                else:
+                    backup_datetime += timedelta(days=365)
+            elif(backup_datetime + timedelta(days=1) > now):
+                backup_datetime += timedelta(days=1)
+        backup_string = backup_datetime.strftime("%Y-%m-%d %H:%M")
+
+        # add backup data to json file
+        add_to_queue(source_paths, dest_path, backup_string)
+
+        # wait until backup time and perform backup
+        time_until_backup = (backup_datetime - datetime.now()).total_seconds()
         import threading
         threading.Timer(time_until_backup, lambda: self.perform_backup(source_paths, dest_path)).start()
 
@@ -214,8 +240,11 @@ class BackupScheduler(customtkinter.CTk):
         if not all(self.check_storage_space(source_path, dest_path) for source_path in source_paths.split("*")):
             return
 
+        # move first backup from queue to history
+        move_to_history()
+
         # create backup name
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H-%M")
 
         # remove duplicate if it exists and copy file/folder
         for source_path in source_paths.split("*"):
@@ -238,7 +267,7 @@ class BackupScheduler(customtkinter.CTk):
                     os.utime(final_path, (creation_time, creation_time))
                     print(f"{source_path} copied to: {final_path}")
                     self.change_info("Backup completed!")
-  
+
             except FileExistsError:
                 print(f"Destination folder '{final_path}' already exists.")
                 self.change_info("Destination already\nexists.")
@@ -252,23 +281,36 @@ class BackupScheduler(customtkinter.CTk):
                 print(f"An unexpected error occurred: {str(e)}")
                 self.change_info("An unexpected\nerror occurred.")
 
-def save_data(source_entry, dest_entry, backup_time):
+def move_to_history():
+    # remove first backup from json file
+    data = load_data()
+    backup = data['queue'].pop(0)
+    data.setdefault("history", []).append(backup)
+    save_data(data)
+
+def add_to_queue(source_entry, dest_entry, backup_time):
     # save data to json file
-    data = {
-        "prev_source_entry": source_entry,
-        "prev_dest_entry": dest_entry,
-        "prev_backup_time": backup_time
+    data = load_data()
+
+    backup_info = {
+        'source': source_entry,
+        'destination': dest_entry,
+        'time': backup_time
     }
+
+    data.setdefault("queue", []).append(backup_info)
+    save_data(data)
+
+def save_data(data):
+    # save data to json file
     with open(resource_path('config/data.json'), 'w') as file:
         json.dump(data, file, indent=4, default=str)
-        print("Backup data saved.")
 
 def load_data():
     # load data from json
     try:
         with open(resource_path('config/data.json'), 'r') as file:
             data = json.load(file)
-            print("Previous backup data loaded.")
             return data
     except FileNotFoundError:
         print("No previous backup data found.")
