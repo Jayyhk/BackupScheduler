@@ -189,16 +189,17 @@ class BackupScheduler(customtkinter.CTk):
         try:
             backup_string = self.day_entry.get() + " " + self.time_entry.get()
             backup_string = backup_string.strip()
-            backup_datetime = datetime.strptime(backup_string, "%m-%d %H:%M")
+            year = datetime.now().year
+            backup_datetime = datetime.strptime(str(year) + "-" + backup_string, "%Y-%m-%d %H:%M")
         except ValueError:
             try:
-                backup_datetime = datetime.strptime(backup_string, "%m-%d")
+                backup_datetime = datetime.strptime(backup_datetime, "$Y-%m-%d")
             except ValueError:
                 try:
                     backup_datetime = datetime.strptime(backup_string, "%H:%M")
-                    current_date = datetime.now().strftime("%m-%d")
+                    current_date = datetime.now().strftime("%Y-%m-%d")
                     backup_datetime_string = current_date + " " + backup_string
-                    backup_datetime = datetime.strptime(backup_datetime_string, "%m-%d %H:%M")
+                    backup_datetime = datetime.strptime(backup_datetime_string, "%Y-%m-%d %H:%M")
                 except ValueError:
                     print("Invalid time format. Please use mm-dd and HH:MM.")
                     self.change_info("Invalid time format.\nPlease use mm-dd and HH:MM.")
@@ -206,10 +207,12 @@ class BackupScheduler(customtkinter.CTk):
         
         # calculate backup datetime
         now = datetime.now()
-        backup_datetime = backup_datetime.replace(year=now.year)
         if(now > backup_datetime):
             if(now.date() > backup_datetime.date()):
-                backup_datetime = backup_datetime.replace(year=backup_datetime.year+1)
+                if((datetime(3, 2, 29) <= now.date().replace(year=(now.year % 3))) and (now.date().replace(year=(now.year % 3)) < datetime(4,2,29))):
+                    backup_datetime += timedelta(days=366)
+                else:
+                    backup_datetime += timedelta(days=365)
             elif(backup_datetime + timedelta(days=1) > now):
                 backup_datetime += timedelta(days=1)
 
