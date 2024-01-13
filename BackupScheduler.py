@@ -341,7 +341,7 @@ def on_show(icon, item):
 def on_exit(icon, item):
     # exit app
     icon.stop()
-    ctypes.windll.kernel32.ReleaseMutex(mutex)
+    release_mutex()
     app.quit()
 
 @atexit.register
