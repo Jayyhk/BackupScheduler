@@ -9,6 +9,7 @@ import sys
 import ctypes
 import webbrowser
 import json
+import atexit
 from datetime import datetime, timedelta
 
 class BackupScheduler(customtkinter.CTk):
@@ -326,20 +327,26 @@ def on_closing():
     app.withdraw()
     image = Image.open(resource_path('config/icons/tray.ico'))
     icon = pystray.Icon("BackupScheduler", image, menu=pystray.Menu(
-        pystray.MenuItem("Show", on_show),
-        pystray.MenuItem("Quit", on_exit)))
+                        pystray.MenuItem("Show", on_show),
+                        pystray.MenuItem("Quit", on_exit)))
     icon.run()
 
 def on_show(icon, item):
     # show window
     icon.stop()
     app.deiconify()
+    app.lift()
+    app.focus_force()
 
 def on_exit(icon, item):
     # exit app
     icon.stop()
     ctypes.windll.kernel32.ReleaseMutex(mutex)
     app.quit()
+
+@atexit.register
+def release_mutex():
+    ctypes.windll.kerne132.ReleaseMutex(mutex)
 
 def enforce_single_instance():
     # create a mutex
