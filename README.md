@@ -2,17 +2,19 @@
 
 BackupScheduler is a Python application built using the [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) UI-library to provide an easy-to-use interface for scheduling and performing backups.
 
-![](https://i.imgur.com/Xq4p7jd.png)
+![](https://i.imgur.com/833dVeF.png)
 
 ## Features
 
 - **🖥️ User-Friendly Interface:** BackupScheduler provides an intuitive and minimalistic GUI for users to input source and destination paths, set backup schedules, and perform backups instantly on directories or multiple files at once.
 
-- **🕒 Schedule Backups:** Users can schedule backups at specific times using the HH:MM (24-hour) format. BackupScheduler utilizes threading to wait until the scheduled time and then automatically triggers the backup process.
+- **🕒 Schedule Backups:** Users can schedule backups at specific times using the `mm-dd` date format and/or `HH:MM` (24-hour) time format. BackupScheduler utilizes threading to wait until the scheduled time and then automatically triggers the backup process.
 
 - **🔄 Backup Continuity:** Scheduled backups continue to execute even when BackupScheduler is minimized to the system tray or closed.
 
-- **⚡Immediate Backup:** Users can perform immediate backups by clicking the "Backup Now" button without inputting a scheduled time.
+- **⚡ Immediate Backup:** Users can perform immediate backups by clicking the "Backup Now" button without inputting a scheduled time.
+
+- **📊 Backup Tracking:** Data from previous backups as well as the current queue can be found in the `data.json` file in the `config` folder.
 
 ## Requirements
 - Python 3.12
@@ -39,7 +41,7 @@ BackupScheduler is a Python application built using the [CustomTkinter](https://
       ```bash
       pip install customtkinter --upgrade
       ```
-**Make sure the config folder is in the same directory as the script when running the script through the command line or through an exe compiled with PyInstaller.**
+**Make sure the `config folder` is in the same directory as the script when running the script through the command line or through an exe compiled with PyInstaller.**
 
 ## Usage
 
@@ -73,6 +75,6 @@ BackupScheduler is a Python application built using the [CustomTkinter](https://
 
 ## Additional Notes
 
-Images used in the application are included in the "icons" folder in the "config" folder.
+Images used in the application are included in the `icons` folder in the `config` folder.
 
 Feel free to open an issue if you spot a bug and customize and enhance the application according to your needs. Happy backing up!
