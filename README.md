@@ -2,7 +2,7 @@
 
 BackupScheduler is a Python application built using the [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) UI-library to provide an easy-to-use interface for scheduling and performing backups.
 
-![](https://i.imgur.com/833dVeF.png)
+![](https://i.imgur.com/fiyRs1Y.png)
 
 ## Features
 
