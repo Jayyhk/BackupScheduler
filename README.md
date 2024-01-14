@@ -55,7 +55,6 @@ BackupScheduler is a Python application built using the [CustomTkinter](https://
 
          ```
          /path/to/file1.txt*/path/to/file2.txt*/path/to/file3.txt
-    - A backup will only occur if the selected directories exist.
 
 2. **Backing Up:**
    - Enter the desired backup time in the "HH:MM" (24-hour) format.
