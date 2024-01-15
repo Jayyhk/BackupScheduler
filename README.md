@@ -2,13 +2,13 @@
 
 BackupScheduler is a Python application built using the [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) UI-library to provide an easy-to-use interface for scheduling and performing backups.
 
-![](https://i.imgur.com/fiyRs1Y.png)
+![](https://i.imgur.com/BtlJR8P.png)
 
 ## Features
 
 - **🖥️ User-Friendly Interface:** BackupScheduler provides an intuitive and minimalistic GUI for users to input source and destination paths, set backup schedules, and perform backups instantly on directories or multiple files at once.
 
-- **🕒 Schedule Backups:** Users can schedule backups at specific times using the `mm-dd` date format and/or `HH:MM` (24-hour) time format. BackupScheduler utilizes threading to wait until the scheduled time and then automatically triggers the backup process.
+- **🕒 Schedule Backups:** Users can schedule backups at specific times using the `mm-dd` date format and/or `HH:MM` (24-hour) time format. Backups can be scheduled daily, weekly, monthly, or none of those.
 
 - **🔄 Backup Continuity:** Scheduled backups continue to execute even when BackupScheduler is minimized to the system tray or closed.
 
@@ -57,8 +57,9 @@ BackupScheduler is a Python application built using the [CustomTkinter](https://
          /path/to/file1.txt*/path/to/file2.txt*/path/to/file3.txt
 
 2. **Backing Up:**
-   - Enter the desired backup time in the "HH:MM" (24-hour) format.
-   - Click the "Schedule Backup" button to schedule the backup for the selected time or click the "Backup Now" button to perform an immediate backup (no time required)
+   - Enter the desired backup time in the `mm-dd` date format and/or `HH:MM` (24-hour) time format.
+   - Choose a daily, weekly, or monthly backup, or none of the above. 
+   - Click the "Schedule Backup" button to schedule the backup for the selected time or click the "Backup Now" button to perform an immediate backup with your configurations applied to that backup.
 
 3. **Minimizing to Tray:**
    - Click the "X" button on the application window to minimize it to the system tray. BackupScheduler will continue to run the background.
@@ -66,11 +67,9 @@ BackupScheduler is a Python application built using the [CustomTkinter](https://
 
 ## Updates to Come
 
-- **⏳️ Repeated Backups:** Create checkboxes for daily, weekly, monthly, etc. or a custom interval.
+- **📊 Backup Tracking:** A separate tab or section that tracks backup history. Provide insights into the date, time, size, and status of each backup operation.
 
-- **📊 Backup Tracking:** Develop a separate tab or section that tracks backup history. Provide insights into the date, time, size, and status of each backup operation.
-
-- **🔂 Update Previous Backup:** Add an option to replace an existing backup.
+- **🔂 Update Previous Backup:** An option to replace an existing backup.
 
 ## Additional Notes
 
