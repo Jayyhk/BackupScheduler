@@ -8,8 +8,7 @@ import os
 import sys
 import ctypes
 import webbrowser
-import json
-import atexit
+import json 
 import threading
 from datetime import datetime, timedelta
 
@@ -22,7 +21,7 @@ class BackupScheduler(customtkinter.CTk):
         dpi = ctypes.windll.user32.GetDpiForWindow(customtkinter.CTk().winfo_id())
         ppi = customtkinter.CTk().winfo_fpixels('1i')
         scale = dpi/ppi
-        app_width = 700
+        app_width = 784
         app_height = 196
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
@@ -36,45 +35,103 @@ class BackupScheduler(customtkinter.CTk):
         customtkinter.set_default_color_theme("blue")
 
         # configure sideframe
-        self.sidebar_frame = customtkinter.CTkFrame(self, width=50, corner_radius=0)
+        self.sidebar_frame = customtkinter.CTkFrame(master=self, width=50, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
         self.sidebar_frame.grid_rowconfigure(4, weight=1)
-        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="Backup\nScheduler", font=customtkinter.CTkFont(size=18, weight="bold"))
+        self.logo_label = customtkinter.CTkLabel(master=self.sidebar_frame, text="Backup\nScheduler", font=customtkinter.CTkFont(size=18, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 20))
 
         # configure github logo
         github_logo = customtkinter.CTkImage(dark_image = Image.open(resource_path('config/icons/github.png')), size = (42, 42))
-        self.github_label = customtkinter.CTkLabel(self.sidebar_frame, image=github_logo, width=50, height=50, text="", fg_color="transparent")
+        self.github_label = customtkinter.CTkLabel(master=self.sidebar_frame, image=github_logo, width=50, height=50, text="", fg_color="transparent")
         self.github_label.bind("<Button-1>", lambda event: webbrowser.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
         self.github_label.bind("<Enter>",  lambda event: self.github_label.configure(cursor="hand2"))
         self.github_label.bind("<Leave>", lambda event: self.github_label.configure(cursor=""))
         self.github_label.grid(row=3, column=0, padx=20, pady=(50,0))
         
         # configure widgets
-        self.source_entry = customtkinter.CTkEntry(self, placeholder_text="Source Path", width=400)
+        self.source_entry = customtkinter.CTkEntry(master=self, placeholder_text="Source Path", width=484)
         self.source_entry.grid(row=0, column=1, padx=10, pady=10, sticky="w")
-        self.source_file_button = customtkinter.CTkButton(self, text="File", width=68, command=self.browse_source_file)
+        self.source_file_button = customtkinter.CTkButton(master=self, text="File", width=68, command=self.browse_source_file)
         self.source_file_button.grid(row=0, column=2, padx=5, pady=10, sticky="w")
-        self.source_folder_button = customtkinter.CTkButton(self, text="Folder", width=68, command=self.browse_source_folder)
+        self.source_folder_button = customtkinter.CTkButton(master=self, text="Folder", width=68, command=self.browse_source_folder)
         self.source_folder_button.grid(row=0, column=2, padx=5, pady=10, sticky="e")
-        self.dest_entry = customtkinter.CTkEntry(self, placeholder_text="Destination Path", width=400)
+        self.dest_entry = customtkinter.CTkEntry(master=self, placeholder_text="Destination Path", width=484)
         self.dest_entry.grid(row=1, column=1, padx=10, pady=10, sticky="w")
-        self.browse_dest_button = customtkinter.CTkButton(self, text="Folder", command=self.browse_dest)
-        self.browse_dest_button.grid(row=1, column=2, padx=5, pady=10)
-        self.date_label = customtkinter.CTkLabel(self, text="Date:", text_color="#DCE4EE", fg_color="transparent")
+        self.browse_dest_button = customtkinter.CTkButton(master=self, text="Folder", command=self.browse_dest)
+        self.browse_dest_button.grid(row=1, column=2, padx=5, pady=10, sticky="")
+        self.date_label = customtkinter.CTkLabel(master=self, text="Date:", text_color="#DCE4EE", fg_color="transparent")
         self.date_label.grid(row=2, column=1, padx=16, pady=10, sticky="w")
-        self.date_entry = customtkinter.CTkEntry(self, placeholder_text="mm-dd", width=55)
+        self.date_entry = customtkinter.CTkEntry(master=self, placeholder_text="mm-dd", width=55)
         self.date_entry.grid(row=2, column=1, padx=(55,10), pady=10, sticky="w")
-        self.time_label = customtkinter.CTkLabel(self, text="Time:", text_color="#DCE4EE", fg_color="transparent")
+        self.time_label = customtkinter.CTkLabel(master=self, text="Time:", text_color="#DCE4EE", fg_color="transparent")
         self.time_label.grid(row=2, column=1, padx=(120,10), pady=10, sticky="w")
-        self.time_entry = customtkinter.CTkEntry(self, placeholder_text="HH:MM", width=58)
+        self.time_entry = customtkinter.CTkEntry(master=self, placeholder_text="HH:MM", width=58)
         self.time_entry.grid(row=2, column=1, padx=(161,10), pady=10, sticky="w")
-        self.schedule_backup_button = customtkinter.CTkButton(self, text="Schedule Backup", width=170, command=self.save_changes)
-        self.schedule_backup_button.grid(row=3, column=1, padx=10, pady=(10,20), sticky="w")
-        self.backup_button = customtkinter.CTkButton(self, text="Backup Now", width=170, command=lambda: self.add_instant_backup(self.source_entry.get(), self.dest_entry.get()))
-        self.backup_button.grid(row=3, column=1, padx=10, pady=(10,20), sticky="e")
-        self.info_label = customtkinter.CTkLabel(self, text="", text_color="#242424", fg_color="transparent")
+
+        self.schedule_backup_button = customtkinter.CTkButton(master=self, text="Schedule Backup", width=170, command=self.save_changes)
+        self.schedule_backup_button.grid(row=3, column=1, padx=(70,10), pady=(10,20), sticky="w")
+        self.backup_button = customtkinter.CTkButton(master=self, text="Backup Now", width=170, command=lambda: self.add_instant_backup(self.source_entry.get(), self.dest_entry.get()))
+        self.backup_button.grid(row=3, column=1, padx=(10,70), pady=(10,20), sticky="e")
+        self.clear_button = customtkinter.CTkButton(master=self, text="Clear Fields", command=lambda: self.clear_fields())
+        self.clear_button.grid(row=2, column=2, padx=5, pady=10, sticky="")
+        self.info_label = customtkinter.CTkLabel(master=self, text="", text_color="#242424", fg_color="transparent")
         self.info_label.grid(row=3, column=2, padx=5, pady=5, sticky="")
+
+        # configure checkboxes
+        daily_var = customtkinter.StringVar(value="off")
+        weekly_var = customtkinter.StringVar(value="off")
+        monthly_var = customtkinter.StringVar(value="off")
+        self.daily = False
+        self.weekly = False
+        self.monthly = False
+
+        def daily_event():
+            print("daily checkbox toggled, current value:", daily_var.get())
+            if(daily_var.get() == "on"):
+                self.daily = True
+            else:
+                self.daily = False
+            print("daily value:" + str(self.daily) + "\nweekly value:" + str(self.weekly) + "\nmonthly value:" + str(self.monthly))
+                
+        def weekly_event():
+            print("weekly checkbox toggled, current value:", weekly_var.get())
+            if(weekly_var.get() == "on"):
+                self.weekly = True
+            else:
+                self.weekly = False
+            print("daily value:" + str(self.daily) + "\nweekly value:" + str(self.weekly) + "\nmonthly value:" + str(self.monthly))
+
+        def monthly_event():
+            print("monthly checkbox toggled, current value:", monthly_var.get())
+            if(monthly_var.get() == "on"):
+                self.monthly = True
+            else:
+                self.monthly = False
+            print("daily value:" + str(self.daily) + "\nweekly value:" + str(self.weekly) + "\nmonthly value:" + str(self.monthly))
+
+        self.daily_checkbox = customtkinter.CTkCheckBox(master=self, text="Daily", text_color="#DCE4EE", command=daily_event, variable=daily_var, onvalue="on", offvalue="off")
+        self.daily_checkbox.grid(row=2, column=1, padx=(10,150), pady=10, sticky="e")
+        self.weekly_checkbox = customtkinter.CTkCheckBox(master=self, text="Weekly", text_color="#DCE4EE", command=weekly_event, variable=weekly_var, onvalue="on", offvalue="off")
+        self.weekly_checkbox.grid(row=2, column=1, padx=(10,80), pady=10, sticky="e")
+        self.monthly_checkbox = customtkinter.CTkCheckBox(master=self, text="Monthly", text_color="#DCE4EE", command=monthly_event, variable=monthly_var, onvalue="on", offvalue="off")
+        self.monthly_checkbox.grid(row=2, column=1, padx=(10,0), pady=10, sticky="e")
+
+    def clear_fields(self):
+        self.source_entry.delete(0, tk.END)
+        self.source_entry.configure(placeholder_text="Source Path")
+        self.dest_entry.delete(0, tk.END)
+        self.dest_entry.configure(placeholder_text="Destination Path")
+        self.date_entry.delete(0, tk.END)
+        self.date_entry.configure(placeholder_text="mm-dd")
+        self.time_entry.delete(0, tk.END)
+        self.time_entry.configure(placeholder_text="HH:MM")
+        self.daily_checkbox.deselect()
+        self.daily = False
+        self.weekly_checkbox.deselect()
+        self.weekly = False
+        self.monthly_checkbox.deselect()
+        self.monthly = False
 
     def change_info(self, text):
         # change info label text
@@ -283,6 +340,23 @@ def move_to_history():
     data = load_data()
     backup = data['queue'].pop(0)
     data.setdefault("history", []).append(backup)
+
+    # check if the backup was daily, weekly, or monthly and if so, schedule another
+    if(backup['daily'] == True):
+        backup_datetime = datetime.strptime(backup['time'], "%Y-%m-%d %H:%M")
+        backup_datetime += timedelta(days=1)
+        backup['time'] = backup_datetime.strftime("%Y-%m-%d %H:%M")
+        data.setdefault("queue", []).append(backup)
+    if(backup['weekly'] == True):
+        backup_datetime = datetime.strptime(backup['time'], "%Y-%m-%d %H:%M")
+        backup_datetime += timedelta(days=7)
+        backup['time'] = backup_datetime.strftime("%Y-%m-%d %H:%M")
+        data.setdefault("queue", []).append(backup)
+    if(backup['monthly'] == True):
+        backup_datetime = datetime.strptime(backup['time'], "%Y-%m-%d %H:%M")
+        backup_datetime += timedelta(days=30)
+        backup['time'] = backup_datetime.strftime("%Y-%m-%d %H:%M")
+        data.setdefault("queue", []).append(backup)
     save_data(data)
 
 def add_to_queue(source_entry, dest_entry, backup_time):
@@ -291,7 +365,10 @@ def add_to_queue(source_entry, dest_entry, backup_time):
     backup_info = {
         'source': source_entry,
         'destination': dest_entry,
-        'time': backup_time
+        'time': backup_time,
+        'daily': app.daily,
+        'weekly': app.weekly,
+        'monthly': app.monthly
     }
     data.setdefault("queue", []).append(backup_info)
 
@@ -354,26 +431,10 @@ def on_show(icon, item):
 def on_exit(icon, item):
     # exit app
     icon.stop()
-    release_mutex()
     app.quit()
 
-@atexit.register
-def release_mutex():
-    ctypes.windll.kernel32.ReleaseMutex(mutex)
-
-def enforce_single_instance():
-    # create a mutex
-    global mutex
-    mutex = ctypes.windll.kernel32.CreateMutexW(None, False, "BackupScheduler_mutex")
-    
-    # if the mutex already exists, exit the program
-    if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
-        print("BackupScheduler is already running.")
-        sys.exit(0)
-
 if __name__ == "__main__":
-    # check if app is already running
-    enforce_single_instance()
+    # start app
     app = BackupScheduler()
     print("Running BackupScheduler...")
     on_startup()
