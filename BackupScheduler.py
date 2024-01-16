@@ -8,8 +8,9 @@ import os
 import sys
 import ctypes
 import webbrowser
-import json 
+import json
 import threading
+import time
 from datetime import datetime, timedelta
 
 class BackupScheduler(customtkinter.CTk):
@@ -92,7 +93,6 @@ class BackupScheduler(customtkinter.CTk):
                 self.daily = True
             else:
                 self.daily = False
-            print("daily value:" + str(self.daily) + "\nweekly value:" + str(self.weekly) + "\nmonthly value:" + str(self.monthly))
                 
         def weekly_event():
             print("weekly checkbox toggled, current value:", weekly_var.get())
@@ -100,7 +100,6 @@ class BackupScheduler(customtkinter.CTk):
                 self.weekly = True
             else:
                 self.weekly = False
-            print("daily value:" + str(self.daily) + "\nweekly value:" + str(self.weekly) + "\nmonthly value:" + str(self.monthly))
 
         def monthly_event():
             print("monthly checkbox toggled, current value:", monthly_var.get())
@@ -108,7 +107,6 @@ class BackupScheduler(customtkinter.CTk):
                 self.monthly = True
             else:
                 self.monthly = False
-            print("daily value:" + str(self.daily) + "\nweekly value:" + str(self.weekly) + "\nmonthly value:" + str(self.monthly))
 
         self.daily_checkbox = customtkinter.CTkCheckBox(master=self, text="Daily", text_color="#DCE4EE", command=daily_event, variable=daily_var, onvalue="on", offvalue="off")
         self.daily_checkbox.grid(row=2, column=1, padx=(10,150), pady=10, sticky="e")
@@ -313,7 +311,10 @@ class BackupScheduler(customtkinter.CTk):
                         os.remove(final_path)
                     shutil.copy(source_path, final_path)
                     print(f"{source_path} copied to: {final_path}")
-                    self.change_info("Backup completed!")
+                    try:
+                        self.change_info("Backup completed!")
+                    except:
+                        pass
                 elif os.path.isdir(source_path) and os.path.isdir(dest_path):
                     if os.path.exists(final_path):
                         shutil.rmtree(final_path)
@@ -321,7 +322,10 @@ class BackupScheduler(customtkinter.CTk):
                     creation_time = datetime.now().timestamp()
                     os.utime(final_path, (creation_time, creation_time))
                     print(f"{source_path} copied to: {final_path}")
-                    self.change_info("Backup completed!")
+                    try:
+                        self.change_info("Backup completed!")
+                    except:
+                        pass
             except FileExistsError:
                 print(f"Destination folder '{final_path}' already exists.")
                 self.change_info("Destination already\nexists.")
@@ -400,7 +404,7 @@ def resource_path(relative_path):
         base_path = os.path.dirname(os.path.realpath(__file__))
     return os.path.join(base_path, relative_path)
 
-def on_startup():
+def check_queue():
     # check queue to see if any backup times have passed
     data = load_data()
     if data:
@@ -409,8 +413,12 @@ def on_startup():
             if datetime.now() > backup_datetime:
                 app.perform_backup(backup['source'], backup['destination'])
     
-    # wait 1 minute and check again
-    threading.Timer(60, lambda: on_startup()).start()
+def check_queue_periodically():
+    # check queue every minute
+    while True:
+        check_queue()
+        print("Checking queue at " + (datetime.now() + timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S"))
+        time.sleep(60)
 
 def on_closing():
     # minimize to tray
@@ -437,7 +445,8 @@ if __name__ == "__main__":
     # start app
     app = BackupScheduler()
     print("Running BackupScheduler...")
-    on_startup()
+    queue_thread = threading.Thread(target=check_queue_periodically)
+    queue_thread.start()
     app.iconbitmap(resource_path('config/icons/BackupScheduler.ico'))
     app.protocol("WM_DELETE_WINDOW", on_closing)
     app.mainloop()
