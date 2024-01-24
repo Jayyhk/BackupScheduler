@@ -49,12 +49,11 @@ BackupScheduler is a Python application built using the [CustomTkinter](https://
 1. **Selecting Paths:**
    - Click the "File" or "Folder" button or enter the source and destination paths manually to select individual files for backup.
 
-    - **Multiple Files Support:**
-      > [!NOTE]
-      > To select multiple individual files at once, separate the file paths with an asterisk (`*`). For example:
-      > ```
-      > /path/to/file1.txt*/path/to/file2.txt*/path/to/file3.txt
-      > ```
+   > [!NOTE]
+   > To select multiple individual files at once, separate the file paths with an asterisk (`*`). For example:
+   > ```
+   > /path/to/file1.txt*/path/to/file2.txt*/path/to/file3.txt
+   > ```
 
 2. **Backing Up:**
    - Enter the desired backup time in the `mm-dd` date format and/or `HH:MM` (24-hour) time format.
