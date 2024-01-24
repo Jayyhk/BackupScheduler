@@ -45,7 +45,7 @@ class BackupScheduler(customtkinter.CTk):
         # configure github logo
         github_logo = customtkinter.CTkImage(dark_image = Image.open(resource_path('config/icons/github.png')), size = (42, 42))
         self.github_label = customtkinter.CTkLabel(master=self.sidebar_frame, image=github_logo, width=50, height=50, text="", fg_color="transparent")
-        self.github_label.bind("<Button-1>", lambda event: webbrowser.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
+        self.github_label.bind("<Button-1>", lambda event: webbrowser.open("https://github.com/Jayyhk/BackupScheduler"))
         self.github_label.bind("<Enter>",  lambda event: self.github_label.configure(cursor="hand2"))
         self.github_label.bind("<Leave>", lambda event: self.github_label.configure(cursor=""))
         self.github_label.grid(row=3, column=0, padx=20, pady=(50,0))
