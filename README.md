@@ -41,7 +41,8 @@ BackupScheduler is a Python application built using the [CustomTkinter](https://
       ```bash
       pip install customtkinter --upgrade
       ```
-**Make sure the `config folder` is in the same directory as the script when running the script through the command line or through an exe compiled with PyInstaller.**
+> [!IMPORTANT]
+> Make sure the `config folder` is in the same directory as the script when running the script through the command line or through an executable compiled with PyInstaller.
 
 ## Usage
 
@@ -49,12 +50,11 @@ BackupScheduler is a Python application built using the [CustomTkinter](https://
    - Click the "File" or "Folder" button or enter the source and destination paths manually to select individual files for backup.
 
     - **Multiple Files Support:**
-         
-      - To select multiple individual files at once, separate the file paths with an asterisk (`*`). For example:
-
-
-         ```
-         /path/to/file1.txt*/path/to/file2.txt*/path/to/file3.txt
+      > [!NOTE]
+      > To select multiple individual files at once, separate the file paths with an asterisk (`*`). For example:
+      > ```
+      > /path/to/file1.txt*/path/to/file2.txt*/path/to/file3.txt
+      > ```
 
 2. **Backing Up:**
    - Enter the desired backup time in the `mm-dd` date format and/or `HH:MM` (24-hour) time format.
