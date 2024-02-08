@@ -64,10 +64,6 @@ BackupScheduler is a Python application built using the [CustomTkinter](https://
    - Click the "X" button on the application window to minimize it to the system tray. BackupScheduler will continue to run the background.
    - Right-click the BackupScheduler icon in the system tray to access options to show the window or quit the application.
 
-## Updates to Come
-
-- **🔂 Update Previous Backup:** Add an option to replace an existing backup.
-
 ## Additional Notes
 
 Images used in the application are included in the `icons` folder in the `config` folder.
