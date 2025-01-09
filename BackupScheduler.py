@@ -429,7 +429,8 @@ class BackupScheduler(customtkinter.CTk):
                     print(f"{source_path} copied to: {final_path}")
                     try:
                         self.change_info("Backup completed!")
-                    except:
+                    except Exception as e:
+                        print(f"An error occurred while changing info: {str(e)}")
                         pass
                 elif os.path.isdir(source_path) and os.path.isdir(dest_path):
                     if os.path.exists(final_path):
@@ -440,7 +441,8 @@ class BackupScheduler(customtkinter.CTk):
                     print(f"{source_path} copied to: {final_path}")
                     try:
                         self.change_info("Backup completed!")
-                    except:
+                    except Exception as e:
+                        print(f"An error occurred while changing info: {str(e)}")
                         pass
             except FileExistsError:
                 print(f"Destination folder '{final_path}' already exists.")
@@ -463,17 +465,17 @@ def move_to_history():
     data.setdefault("history", []).append(backup)
 
     # check if the backup was daily, weekly, or monthly and if so, schedule another
-    if backup["daily"] == True:
+    if backup["daily"]:
         backup_datetime = datetime.strptime(backup["time"], "%Y-%m-%d %H:%M")
         backup_datetime += timedelta(days=1)
         backup["time"] = backup_datetime.strftime("%Y-%m-%d %H:%M")
         data.setdefault("queue", []).append(backup)
-    if backup["weekly"] == True:
+    if backup["weekly"]:
         backup_datetime = datetime.strptime(backup["time"], "%Y-%m-%d %H:%M")
         backup_datetime += timedelta(days=7)
         backup["time"] = backup_datetime.strftime("%Y-%m-%d %H:%M")
         data.setdefault("queue", []).append(backup)
-    if backup["monthly"] == True:
+    if backup["monthly"]:
         backup_datetime = datetime.strptime(backup["time"], "%Y-%m-%d %H:%M")
         backup_datetime += timedelta(days=30)
         backup["time"] = backup_datetime.strftime("%Y-%m-%d %H:%M")
